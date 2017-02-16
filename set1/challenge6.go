@@ -31,8 +31,8 @@ func CalculateHammingDistance(word1 string, word2 string) (int, error) {
 func FindKeySize(dat []byte) int {
   for KEYSIZE:=2; KEYSIZE<40; KEYSIZE++ {
     total := 0.0
-    for i:=0; i<10; i++ {
-      for j:=i; j<10; j++ {
+    for i:=0; i<30; i++ {
+      for j:=i; j<30; j++ {
         if i != j {
           first := string(dat[i*KEYSIZE:(i+1)*KEYSIZE])
           second := string(dat[j*KEYSIZE:(j+1)*KEYSIZE])
@@ -44,26 +44,33 @@ func FindKeySize(dat []byte) int {
     }
     fmt.Println(KEYSIZE, total)
   }
-  return 6;
+  return 2;
 }
 
 func main() {
-  absPath, _ := filepath.Abs("set1/ciphertext.txt")
-  dat, _ := ioutil.ReadFile(absPath)
+  absPath, _ := filepath.Abs("ciphertext.txt")
+  datBase64, _ := ioutil.ReadFile(absPath)
+  dat, err := Base64ToBytes(string(datBase64))
+  fmt.Println(dat, err)
+  fmt.Println(BytesToBase64(dat))
   KEYSIZE := FindKeySize(dat)
   
-  var parsed [][]byte
-  numBlocks := len(dat)/KEYSIZE;
-  for index:=0; index<KEYSIZE; index++ {
-    indexSlice := []byte{}
-    for blockNum:=0; blockNum<numBlocks; blockNum++ {
-      indexSlice = append(indexSlice, dat[blockNum*KEYSIZE + index])
+  for KEYSIZE=2; KEYSIZE<40; KEYSIZE++ {
+    fmt.Println(KEYSIZE)
+    var parsed [][]byte
+    numBlocks := len(dat)/KEYSIZE;
+    for index:=0; index<KEYSIZE; index++ {
+      indexSlice := []byte{}
+      for blockNum:=0; blockNum<numBlocks; blockNum++ {
+        indexSlice = append(indexSlice, dat[blockNum*KEYSIZE + index])
+      }
+      parsed = append(parsed, indexSlice)
     }
-    parsed = append(parsed, indexSlice)
-  }
-  for i, block := range parsed {
-    fmt.Println(i)
-    BreakRKX(block)
+    
+    for _, block := range parsed {
+      // fmt.Println(i, block)
+      BreakRKX(block)
+    }
   }
   // fmt.Println(parsed)
 }

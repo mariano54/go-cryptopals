@@ -15,7 +15,14 @@ var base64Chars = [...]rune{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K
   'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
   '3', '4', '5', '6', '7', '8', '9', '+', '/'}
 
-// CDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+func IndexOf(slice [64]rune, value rune) int {
+  for p, v := range slice {
+    if v == value {
+      return p
+    }
+  }
+  return -1
+}
 
 func HexToBytes(hex string) ([]byte, error) {
   hex = strings.ToLower(hex)
@@ -71,6 +78,50 @@ func BytesToBase64(input []byte) (string, error) {
     output[len(output)-2] = '='
   }
   return string(output), nil
+}
+
+func Base64ToBytes(input string) ([]byte, error) {
+  // Iterate through base64 runes of the string
+  if len(input)%4 != 0 {
+    return nil, errors.New("Invalid padding")
+  }
+  inputNoNL := ""
+  for _, r := range input {
+    if r != 10 {
+      inputNoNL += string(r)
+    }
+  }
+
+  strIndex := 0
+  totalBytes := make([]byte, 3*len(inputNoNL)/4)
+  totalBytesIndex := 0
+  for _, r := range inputNoNL {
+    base64Index := IndexOf(base64Chars, r)
+    if base64Index == -1 {
+      if r == '=' {
+        base64Index = 0 // Padding
+      } else {
+        return nil, errors.New("Invalid character")
+      }
+    }
+    switch strIndex % 4 {
+    case 0:
+      totalBytes[totalBytesIndex] = byte(base64Index) << 2
+    case 1:
+      totalBytes[totalBytesIndex] += byte(base64Index) >> 4
+      totalBytesIndex++
+      totalBytes[totalBytesIndex] = byte(base64Index) << 4
+    case 2:
+      totalBytes[totalBytesIndex] += byte(base64Index) >> 2
+      totalBytesIndex++
+      totalBytes[totalBytesIndex] = byte(base64Index) << 6
+    case 3:
+      totalBytes[totalBytesIndex] += byte(base64Index)
+      totalBytesIndex++
+    }
+    strIndex++
+  }
+  return totalBytes, nil
 }
 
 func HexToBase64(hexString string) (string, error) {

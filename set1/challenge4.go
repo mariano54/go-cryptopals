@@ -16,7 +16,7 @@ func BreakRKX(bytes []byte) {
     }
     res, _ := Xor(bytes, key)
     calcd := Score(string(res))
-    if calcd >= 0.2 {
+    if calcd >= 0.25 {
       fmt.Println(calcd, string(res))
     }
   }
