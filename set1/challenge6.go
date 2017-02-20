@@ -46,7 +46,7 @@ func FindKeySize(dat []byte) int {
 }
 
 func Challenge6() {
-  absPath, _ := filepath.Abs("ciphertext.txt")
+  absPath, _ := filepath.Abs("ciphertext-6.txt")
   datBase64, _ := ioutil.ReadFile(absPath)
   dat, _ := Base64ToBytes(string(datBase64))
   KEYSIZE := FindKeySize(dat)
@@ -77,8 +77,4 @@ func Challenge6() {
     decrypted = append(decrypted, res...)
   }
   fmt.Println(string(decrypted))
-}
-
-func main() {
-  Challenge6()
 }
