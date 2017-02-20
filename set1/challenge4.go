@@ -2,24 +2,26 @@ package main
 
 import (
   "bufio"
-  "fmt"
   "log"
   "os"
 )
 
-func BreakRKX(bytes []byte) {
+func BreakRKX(bytes []byte) int {
   key := make([]byte, len(bytes))
-
+  max := 0.0
+  maxSolution := 0
   for char := 0; char < 256; char++ {
     for i, _ := range key {
       key[i] = byte(char)
     }
     res, _ := Xor(bytes, key)
     calcd := Score(string(res))
-    if calcd >= 0.25 {
-      fmt.Println(calcd, string(res))
+    if calcd >= max {
+      max = calcd
+      maxSolution = int(char)
     }
   }
+  return maxSolution
 }
 
 func challenge4() {
