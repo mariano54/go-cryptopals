@@ -34,7 +34,3 @@ func Challenge7() {
   }
   fmt.Println(string(decrypted))
 }
-
-func main() {
-  Challenge7()
-}
