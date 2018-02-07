@@ -1,4 +1,4 @@
-package main
+package set1
 
 import (
 	"bufio"
@@ -49,8 +49,4 @@ func challenge8() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func main() {
-	challenge8()
 }

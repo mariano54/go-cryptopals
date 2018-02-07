@@ -1,4 +1,4 @@
-package main
+package set1
 
 import (
 	"crypto/aes"
@@ -30,19 +30,33 @@ func ReadBase64DataFromFile(filename string) ([]byte, error) {
 	return dat, nil
 }
 
-func challenge7() {
-	dat, err := ReadBase64DataFromFile("ciphertext-7.txt")
+func ECBDecrypt(key []byte, ciphertext []byte) []byte {
+	cipher, err := aes.NewCipher(key)
 	HandleError(err)
 
+	plaintext := make([]byte, len(ciphertext))
+	numBlocks := len(ciphertext) / 16
+	for i := 0; i < numBlocks; i++ {
+		cipher.Decrypt(plaintext[i*16:], ciphertext[i*16:(i+1)*16])
+	}
+	return plaintext
+}
+
+func ECBEncrypt(key []byte, plaintext []byte) []byte {
+	cipher, err := aes.NewCipher(key)
+	HandleError(err)
+
+	ciphertext := make([]byte, len(plaintext))
+	numBlocks := len(plaintext) / 16
+	for i := 0; i < numBlocks; i++ {
+		cipher.Encrypt(ciphertext[i*16:], plaintext[i*16:(i+1)*16])
+	}
+	return ciphertext
+}
+func challenge7() {
+	data, err := ReadBase64DataFromFile("ciphertext-7.txt")
+	HandleError(err)
 	key := []byte("YELLOW SUBMARINE")
 
-	cipher, err4 := aes.NewCipher(key)
-	HandleError(err4)
-
-	decrypted := make([]byte, len(dat))
-	numBlocks := len(dat) / 16
-	for i := 0; i < numBlocks; i++ {
-		cipher.Decrypt(decrypted[i*16:], dat[i*16:(i+1)*16])
-	}
-	fmt.Println(string(decrypted))
+	fmt.Println(string(ECBDecrypt(key, data)))
 }

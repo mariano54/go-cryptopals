@@ -1,33 +1,79 @@
 package main
 
-import "fmt"
+import (
+	"crypto/aes"
+	"fmt"
+	"go-cryptopals/set1"
+	"log"
+)
 
-var blockSize = 16
+const BlockSize = 16
 
-func challenge10() {
-	// key := []byte("YELLOW SUBMARINE")
-	// cipher, err1 := aes.NewCipher(key)
-	// if err1 != nil {
-	// 	log.Panic(err)
-	// }
-	// dat, err2 := set1.ReadBase64DataFromFile("ciphertext-10.txt")
-	//
-	IV := "0000000000000000"
-	for i := 0; i < len(IV); i++ {
-		fmt.Printf("%x", IV[i])
+func PKCS7Padding(data []byte) []byte {
+	if len(data)%BlockSize != 0 {
+		bytesMissing := BlockSize - len(data)%BlockSize
+		for i := 0; i < bytesMissing; i++ {
+			data = append(data, byte(bytesMissing))
+		}
 	}
-	fmt.Println()
-	fmt.Printf("%x", IV)
-	// encryptedBlocks := make([]byte, len(data))
-	// for blockIndex := 0 {
-	//   // If there is no more data to read
-	//   if (blockIndex + 1) * blockSize > len(  data) - (blockIndex * blockSize) {
-	//     break
-	//   }
-	//   encryptedBlocks = append(encryptedBlocks, )
-	// }
+	return data
 }
 
-func main() {
-	challenge10()
+func CBCEncrypt(iv []byte, key []byte, plaintext []byte) []byte {
+	cipher, err := aes.NewCipher(key)
+	if err != nil {
+		log.Panic(err)
+	}
+	plaintext = PKCS7Padding(plaintext)
+	ciphertext := make([]byte, len(plaintext))
+	numBlocks := (len(ciphertext) / BlockSize)
+
+	prev := iv
+	for i := 0; i < numBlocks; i++ {
+		start, end := i*BlockSize, (i+1)*BlockSize
+		xored, err2 := set1.Xor(plaintext[start:end], prev)
+		if err2 != nil {
+			panic("Failed xor")
+		}
+		cipher.Encrypt(ciphertext[start:end], xored)
+		prev = ciphertext[start:end]
+	}
+	return ciphertext
+}
+
+func CBCDecrypt(iv []byte, key []byte, ciphertext []byte) []byte {
+	cipher, err := aes.NewCipher(key)
+	if err != nil {
+		log.Panic(err)
+	}
+	ciphertext = PKCS7Padding(ciphertext)
+	plaintext := make([]byte, len(ciphertext))
+	numBlocks := (len(ciphertext) / BlockSize)
+	prev := iv
+	for i := 0; i < numBlocks; i++ {
+		start, end := i*BlockSize, (i+1)*BlockSize
+		cipher.Decrypt(plaintext[start:end], ciphertext[start:end])
+		xored, err2 := set1.Xor(plaintext[start:end], prev)
+		if err2 != nil {
+			panic("Failed xor")
+		}
+		copy(plaintext[start:end], xored)
+		prev = ciphertext[start:end]
+	}
+	return plaintext
+}
+
+func challenge10() {
+	key := []byte("YELLOW SUBMARINE")
+
+	data, err := set1.ReadBase64DataFromFile("ciphertext-10.txt")
+	if err != nil {
+		log.Panic(err)
+	}
+	iv := make([]byte, 16)
+	decrypted := CBCDecrypt(iv, key, data)
+	encrypted := CBCEncrypt(iv, key, decrypted)
+	decrypted = CBCDecrypt(iv, key, encrypted)
+
+	fmt.Println(string(decrypted))
 }
