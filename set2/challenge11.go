@@ -6,7 +6,8 @@ import (
 	"math/rand"
 )
 
-func randomBytes(numBytes int) []byte {
+// RandomBytes generates a slice of random bytes
+func RandomBytes(numBytes int) []byte {
 	buf := make([]byte, numBytes)
 	read, err := rand.Read(buf)
 	if read != numBytes || err != nil {
@@ -16,36 +17,41 @@ func randomBytes(numBytes int) []byte {
 }
 
 func generateKey() []byte {
-	return randomBytes(BlockSize)
+	return RandomBytes(BlockSize)
 }
 
 func randomEncrypt(plaintext []byte) []byte {
-	plaintext = append(randomBytes(rand.Int()%5), plaintext...)
-	plaintext = append(plaintext, randomBytes(rand.Int()%5)...)
+	plaintext = append(RandomBytes(rand.Int()%5), plaintext...)
+	plaintext = append(plaintext, RandomBytes(rand.Int()%5)...)
 
 	if len(plaintext)%16 != 0 {
 		missingBytes := 16 - len(plaintext)%16
-		plaintext = append(plaintext, randomBytes(missingBytes)...)
+		plaintext = append(plaintext, RandomBytes(missingBytes)...)
 	}
 	if rand.Int()%2 == 0 {
 		// Encrypt CBC
-		return CBCEncrypt(randomBytes(16), randomBytes(16), plaintext)
-	} else {
-		// Encrypt ECB
-		return set1.ECBEncrypt(randomBytes(16), plaintext)
+		return CBCEncrypt(RandomBytes(16), RandomBytes(16), plaintext)
 	}
+	// Encrypt ECB
+	return set1.ECBEncrypt(RandomBytes(16), plaintext)
 }
+
+// DetectECB detects if an encryption function uses ECB mode
+func DetectECB(encrypter func([]byte) []byte) bool {
+	plaintext := make([]byte, 320)
+	ciphertext := encrypter(plaintext)
+	for i := 100; i < 200; i++ {
+		if ciphertext[i] != ciphertext[i+BlockSize] {
+			return false
+		}
+	}
+	return true
+}
+
 func challenge11() {
-	for {
-		fmt.Print("Enter plaintext: ")
-		var input string
-		fmt.Scanln(&input)
-		fmt.Println(randomEncrypt([]byte(input)))
-
-		fmt.Println(randomEncrypt([]byte("00000000000000000000000000000000000000000")))
-	}
-}
-
-func main() {
-	challenge11()
+	fmt.Println(DetectECB(randomEncrypt))
+	fmt.Println(DetectECB(randomEncrypt))
+	fmt.Println(DetectECB(randomEncrypt))
+	fmt.Println(DetectECB(randomEncrypt))
+	fmt.Println(DetectECB(randomEncrypt))
 }
